@@ -27,6 +27,8 @@ plot(flowDataB$IgD, flowDataB$CD27)
 #prudent to investigate if this at all correlates with any transcriptomic differences
 #To check this, we will make an umap based on the GLMPCA. 
 glmpcaUmap <- umap(reducedDim(csfSce))
+reducedDim(csfSce, "GLMPCA_UMAP") <- glmpcaUmap
+saveRDS(csfSce, "Data/SingleCellExpFiles/csfSce_4_GLMPCA_UMAP.rds")
 
 #And now, we plot CD27 on top of this.
 ggplotData <- data.frame(glmpcaUmap, "Cell_type" = csfSce$Cell_type,
@@ -77,4 +79,4 @@ corrDfX2 <- data.frame("names" = names(corrVecSCEX2Ordered),
 write.csv(corrDfX2, "Data/Integrated/GLMPCAUMAP_V2_vs_all_transcripts.csv",
           row.names = FALSE)
 
-test <- read.csv("Data/Integrated/GLMPCAUMAP_V2_vs_all_transcripts.csv")
+#test <- read.csv("Data/Integrated/GLMPCAUMAP_V2_vs_all_transcripts.csv")

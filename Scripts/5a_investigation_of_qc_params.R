@@ -8,7 +8,7 @@ library(uwot)
 
 #Here the data from step 1 is added.
 csfSce <- readRDS("Data/SingleCellExpFiles/csfSce_1_preQC.rds")
-flowData <- read.csv("Data/Flow_data/flowDataPlusIndexAndcellType.csv")
+flowData <- read.csv("Data/Cytometry/flowDataPlusIndexAndcellType.csv")
 
 #Now, we add a column of cell type information
 csfSce$cell_type <- "ASC"

@@ -253,6 +253,9 @@ for(i in colsAndNames){
 #the reason for this is that the colors otherwise become very hard to unerstand. 
 pieDat <- barGraphDat[-which(barGraphDat$Specific == "Not_tested"),]
 pieDatSplit <- split(pieDat, paste0(pieDat$Sample, "_", pieDat$Specific))
+#We also add all donors as a fourth category
+pieDatSplit$All_TRUE <- pieDat[which(pieDat$Specific == "TRUE"),]
+pieDatSplit$All_FALSE <- pieDat[which(pieDat$Specific == "FALSE"),]
 
 dir.create("Results/Raw_pies")
 lapply(names(pieDatSplit), function(x){
