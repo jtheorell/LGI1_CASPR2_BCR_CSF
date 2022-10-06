@@ -21,7 +21,19 @@ colData(csfSce) <- cbind(colData(csfSce), BCR_H_ordered[,c("V_CALL","JUNCTION",
                                                           "light_type","Clonal",
                                                           "All_mutations",
                                                           "Non_silent_mutations",
-                                                          "Specific", "SubClone")])
+                                                          "Specific", "Specific_UCA",
+                                                          "SubClone")])
 
 saveRDS(csfSce, "Data/SingleCellExpFiles/csfSce_5_BCR.rds")
 
+#We also take this opportunity to add the cell type information to the latest BCR.
+cellTypeData<- read.csv("Data/Cytometry/flowDataPlusIndexAndcellType.csv", row.names = 1)
+
+BCR_all$Cell_type <- "ASC"
+BCR_all$Cell_type[which(BCR_all$CELL %in% cellTypeData$Cell[which(cellTypeData$Cell %in% BCR_all$CELL & 
+                                                                      cellTypeData$Cell_type == "B")])] <- "B"
+table(BCR_all$Cell_type)
+#ASC   B 
+#582 201 
+write.csv(BCR_all, "Data/BCR_database_versions/8_surface_pheno_included.csv",
+          row.names = FALSE)
