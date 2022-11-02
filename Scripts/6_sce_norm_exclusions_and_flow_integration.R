@@ -87,9 +87,6 @@ dev.off()
 
 csfSce <- csfSce[,!csfSce$lowQual]
 
-#Now, we are going to try something highly experimental. 
-
-
 #So after losing these 15 cells, we are down to 347. 
 
 #Normalization. There are 100s of methods, but according to this paper, 
