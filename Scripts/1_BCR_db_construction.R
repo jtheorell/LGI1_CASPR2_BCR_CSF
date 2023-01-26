@@ -178,7 +178,7 @@ write.csv(bracerFile, "Data/BCR_database_versions/1_IMGT_gapped_db_TPM_added.csv
 #true, there are only four that have double heavy chains and that are clonal. Among 
 #these four, selecting the dominant chain will always lead to inclusion into the largest
 #clone, so this is done here, for all chains, as it makes the downstream analyses
-#so much cleaner. 
+#so much cleaner.
 bracerFile1H <- do.call("rbind", lapply(c("H", "K", "L"), function(i){
     bracerFile_focus <- bracerFile[which(bracerFile$LOCUS == i),]
     bracerFile_focus_condensed <- 
@@ -197,20 +197,30 @@ bracerFile1H <- do.call("rbind", lapply(c("H", "K", "L"), function(i){
 }))
 
 dim(bracerFile1H)
-
-
-
-
-bracerFile1H <- rbind(bracerFile1H[-which(bracerFile1H$CELL %in% twoLight),],bracerFile1HDouble)
-#Now, we are down to 1560 chains from the remaining, complete cells. 
+#1074   59
+#Furthermore, in the cases where there are two light chains (K+L), it is always the more
+#highly expressed one that is specific, after a number of tests. For this reason, 
+#we can exclude all lowly expressed chains in cases where two are present. 
+bracerFile2Chain <- do.call("rbind", lapply(unique(bracerFile1H$CELL), function(x){
+    locDat <- bracerFile1H[which(bracerFile1H$CELL == x),]
+    if(nrow(locDat) > 2){
+        locLightDat <- locDat[which(locDat$LOCUS != "H"),]
+        locDat <- rbind(locDat[which(locDat$LOCUS == "H"),],
+                        locLightDat[which.max(locLightDat$TPM[]),])
+    }
+    locDat
+}))
+dim(bracerFile2Chain)
+#1040   59
+#Now, we are down to 1040 chains from the remaining, complete cells, i.e. 2 chains per cell. 
 #And this is saved
-write.csv(bracerFile1H, "Data/BCR_database_versions/3_IMGT_gapped_db_TPM_added_1_H.csv", 
+write.csv(bracerFile2Chain, "Data/BCR_database_versions/3_IMGT_gapped_db_TPM_added_1H_1L.csv", 
           row.names =FALSE)
 
 #Now, we use the standard Hamming-based definition of clones from Chanteo/shazam.
 #We leave the one provided by BraCeR, as it is hard to trace what has actually happened there. 
 #Step one here is to extract the relevant sequences, 
-bracerFileH <- bracerFile1H[which(bracerFile1H$LOCUS == "H"),]
+bracerFileH <- bracerFile2Chain[which(bracerFile2Chain$LOCUS == "H"),]
 
 #Now, we cluster the data with a conservative, Hamming-based method, which 
 #has been compared to other methods and been identified as giving idetical results.
@@ -239,7 +249,7 @@ hamClones <- read.table("Data/BCR_database_versions/changeoClusteringFile_Ham_re
 #to the ones generated above, apart from the actual numbers. 
 originalCloneNames <- read.csv("Data/BCR_auxiliaries/Original_clone_names.csv")
 
-bracerFileHam <- bracerFile1H
+bracerFileHam <- bracerFile2Chain
 bracerFileHam$HamClone <- NA
 for(i in bracerFileH$CELL){
     bracerFileHam$HamClone[which(bracerFileHam$CELL == i)] <- 
@@ -286,7 +296,7 @@ for(i in cloneNames){
 
 table(bracerFileHam$intraClonalDistance)
 #0   1   2   3   4   5   6 
-#250  22   6  13   6   5   4
+#240  20   6  12   6   4   4
 
 bracerFileHam$intraClonalDistanceL <- NA
 cloneNames <- unique(bracerFileHam$HamClone)
@@ -314,12 +324,12 @@ for(i in cloneNames){
 
 table(bracerFileHam$intraClonalDistanceL)
 #0   1   2   3   4  12 
-#249  35   9   7   2   4
+#230  40   8   6   4   4 
 
 #We also un-name all clones that consist of one cell only
 bracerFileHam$HamClone[which(is.na(bracerFileHam$intraClonalDistance))] <- NA
 
-#And with that, we have a very clean dataset, with 503 cells, where the largest
+#And with that, we have a very clean dataset, with 520 cells, where the largest
 #intra-clonal junction edit distance for the heavy chain is 6
 
 #Here, we add a column for the light type, which will be useful downstream
@@ -336,8 +346,9 @@ for(i in unique(bracerFileHam$CELL)){
 }
 
 table(bracerFileHam$light_type)
-#double      K      L 
-#   102    592    380
+#K   L 
+#618 422
+#Which is great, as it means that no cells have more than one light chain now. 
 
 #Now, we add mutational information
 bracerFileHam <- observedMutations(bracerFileHam, sequenceColumn = "SEQUENCE_IMGT",
@@ -378,86 +389,3 @@ table(bracerFileIgG$Sample[which(bracerFileIgG$LOCUS == "H")])
 #And this is saved. 
 write.csv(bracerFileIgG, "Data/BCR_database_versions/5_IMGT_gapped_db_IgG.csv", 
           row.names = FALSE)
-
-uniqueCells <- unique(bracerFileIgG$CELL)
-
-interestingCols <- c("Cell", "HamClone", "intraClonalDistance", "Isotype", "Junction_H",
-                     "V_gene_H", "TPM_H", "Rep_CDR_mut_H", "Sil_CDR_mut_H", 
-                     "Rep_FWR_mut_H", "Sil_FWR_mut_H", "All_mut_H", "Func_IgK", 
-                     "V_gene_K", "TPM_K", "Rep_CDR_mut_K", "Sil_CDR_mut_K", 
-                     "Rep_FWR_mut_K", "Sil_FWR_mut_K", "All_mut_K", "Func_IgL",  
-                     "V_gene_L", "TPM_L", "Rep_CDR_mut_L", "Sil_CDR_mut_L", 
-                     "Rep_FWR_mut_L", "Sil_FWR_mut_L", "All_mut_L")  
-bcrDf <- data.frame(matrix(nrow = length(uniqueCells), 
-                           ncol = length(interestingCols), 
-                           dimnames = list(uniqueCells, interestingCols)))
-
-#So now, we run this very dirty script below. 
-BCR_H <- bracerFileIgG[which(bracerFileIgG$LOCUS == "H"),]
-for(i in uniqueCells){
-    if(any(BCR_H$CELL == i)){
-        locCell <- BCR_H[which(BCR_H$CELL == i),]
-        locDf <- bcrDf[which(row.names(bcrDf) == i),]
-        locDf$Cell <- locCell$CELL
-        locDf$HamClone <- locCell$HamClone
-        locDf$intraClonalDistance <- locCell$intraClonalDistance
-        locDf$Isotype <- locCell$ISOTYPE
-        locDf$Junction_H <- locCell$JUNCTION
-        locDf$V_gene_H <- locCell$V_CALL
-        locDf$TPM_H <- locCell$TPM
-        locDf$Rep_CDR_mut_H <- locCell$mu_count_cdr_r
-        locDf$Sil_CDR_mut_H <- locCell$mu_count_cdr_s
-        locDf$Rep_FWR_mut_H <- locCell$mu_count_fwr_r
-        locDf$Sil_FWR_mut_H <- locCell$mu_count_fwr_s
-        locDf$All_mut_H <- sum(locCell$mu_count_cdr_r, 
-                               locCell$mu_count_cdr_s, 
-                               locCell$mu_count_fwr_r, 
-                               locCell$mu_count_fwr_s)
-        bcrDf[which(row.names(bcrDf) == i),] <- locDf
-    }
-}
-
-BCR_K <- bracerFileIgG[which(bracerFileIgG$LOCUS == "K"),]
-for(i in uniqueCells){
-    if(any(BCR_K$CELL == i)){
-        locCell <- BCR_K[which(BCR_K$CELL == i),]
-        locDf <- bcrDf[which(row.names(bcrDf) == i),]
-        locDf$Func_IgK <- locCell$FUNCTIONAL
-        locDf$V_gene_K <- locCell$V_CALL
-        locDf$TPM_K <- locCell$TPM
-        locDf$Rep_CDR_mut_K <- locCell$mu_count_cdr_r
-        locDf$Sil_CDR_mut_K <- locCell$mu_count_cdr_s
-        locDf$Rep_FWR_mut_K <- locCell$mu_count_fwr_r
-        locDf$Sil_FWR_mut_K <- locCell$mu_count_fwr_s
-        locDf$All_mut_K <- sum(locCell$mu_count_cdr_r, 
-                               locCell$mu_count_cdr_s, 
-                               locCell$mu_count_fwr_r, 
-                               locCell$mu_count_fwr_s)
-        bcrDf[which(row.names(bcrDf) == i),] <- locDf
-    }
-}
-
-#This is ugly coding, but today we will accept that. 
-BCR_L <- bracerFileIgG[which(bracerFileIgG$LOCUS == "L"),]
-for(i in uniqueCells){
-    if(any(BCR_L$CELL == i)){
-        locCell <- BCR_L[which(BCR_L$CELL == i),]
-        locDf <- bcrDf[which(row.names(bcrDf) == i),]
-        locDf$Func_IgL <- locCell$FUNCTIONAL
-        locDf$V_gene_L <- locCell$V_CALL
-        locDf$TPM_L <- locCell$TPM
-        locDf$Rep_CDR_mut_L <- locCell$mu_count_cdr_r
-        locDf$Sil_CDR_mut_L <- locCell$mu_count_cdr_s
-        locDf$Rep_FWR_mut_L <- locCell$mu_count_fwr_r
-        locDf$Sil_FWR_mut_L <- locCell$mu_count_fwr_s
-        locDf$All_mut_L <- sum(locCell$mu_count_cdr_r, 
-                               locCell$mu_count_cdr_s, 
-                               locCell$mu_count_fwr_r, 
-                               locCell$mu_count_fwr_s)
-        bcrDf[which(row.names(bcrDf) == i),] <- locDf
-    }
-}
-
-#And with this, we are ready to export the file and to export a file used for
-#integration with the flow cytometry data
-write.csv(bcrDf, "Data/BCR_database_versions/condensed_file_one_BCR_per_row.csv")

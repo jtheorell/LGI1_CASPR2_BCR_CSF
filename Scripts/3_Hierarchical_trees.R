@@ -138,6 +138,3 @@ for(i in hamClones){
 #And there we are done and ready for the next step!
 write.csv(BCR_all, "Data/BCR_database_versions/7_Subclones_included.csv",
           row.names = FALSE)
-
-    
-    
