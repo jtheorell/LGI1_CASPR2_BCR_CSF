@@ -32,13 +32,13 @@ gse <- gseGO(geneList=gene_list,
              eps = 0)
 #Warning messages:
 #    1: In preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam,  :
-#                                      There are ties in the preranked stats (0.06% of the list).
+#                                      There are ties in the preranked stats (0.01% of the list).
 #                                  The order of those tied genes will be arbitrary, which may produce unexpected results.
 #                                  2: In fgseaMultilevel(...) :
-#                                      There were 47 pathways for which P-values were not calculated properly due to unbalanced (positive and negative) gene-level statistic values. For such pathways pval, padj, NES, log2err are set to NA. You can try to increase the value of the argument nPermSimple (for example set it nPermSimple = 10000)
+#                                      There were 46 pathways for which P-values were not calculated properly due to unbalanced (positive and negative) gene-level statistic values. For such pathways pval, padj, NES, log2err are set to NA. You can try to increase the value of the argument nPermSimple (for example set it nPermSimple = 10000)
 #                                  3: In fgseaMultilevel(...) :
-#                                      For some of the pathways the P-values were likely overestimated. For such pathways log2err is set to NA.
-                                  
+#                                      For some of the pathways the P-values were likely overestimated. For such pathways log2err is set to NA.                                  
+saveRDS(gse, "Results/Gene_set_enrichment_analysis/GS_common.rds")
 
 dotplot(gse, showCategory=10, split=".sign") + facet_grid(.~.sign)
 ggsave("Results/Gene_set_enrichment_analysis/Gene_set_enrichment_dotplot_downsamp.pdf", width = 8, height = 12)
@@ -69,10 +69,10 @@ posResult <- gse@result[which(gse@result$enrichmentScore >0),]
 allTopGenes <- unlist(unname(sapply(posResult$core_enrichment, function(x) strsplit(x, "\\/"))))
 
 targHits <- length(which(unique(allTopGenes) %in% targetsAE))
-#Here we get 4, but we have 8 occurrences of them. They dfistribute like this: 
+#Here we get 2, but we have 4 occurrences of them. They dfistribute like this: 
 table(allTopGenes[which(allTopGenes %in% targetsAE)])
-#CD19  CD22 CXCR4  SDC1 
-#4     1     1     2
+#CD19  SDC1 
+#1     3
 
 nonTarghits <- length(unique(allTopGenes))-targHits
 #1063
@@ -86,7 +86,7 @@ fisherDf <- data.frame("Non_target" = c(nonTargGenes-nonTarghits, nonTarghits),
 row.names(fisherDf) <- c("Non_hit", "Hit")
 #So a fisher on this
 fisher.test(fisherDf, alternative = "greater")
-#p-value = 0.4319, so nothing.
+#p-value = 0.7858
 
 #What about the top 20?
 
@@ -106,6 +106,6 @@ fisherDf <- data.frame("Non_target" = c(nonTargGenes-nonTarghits, nonTarghits),
 row.names(fisherDf) <- c("Non_hit", "Hit")
 #So a fisher on this
 fisher.test(fisherDf, alternative = "greater")
-#p-value = 0.8507
+#p-value = 0.9143
 
 

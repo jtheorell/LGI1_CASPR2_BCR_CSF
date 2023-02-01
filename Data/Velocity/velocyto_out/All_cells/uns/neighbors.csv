@@ -1,7 +1,7 @@
-"{'connectivities_key': 'connectivities', 'distances_key': 'distances', 'indices': array([[  0, 258, 284, ..., 371, 370, 295],
-       [  1,  25,  87, ..., 266, 130, 150],
-       [  2, 122, 256, ..., 106, 168, 186],
+"{'connectivities_key': 'connectivities', 'distances_key': 'distances', 'indices': array([[  0, 261, 284, ..., 363, 295, 468],
+       [  1, 124,  64, ..., 179, 180, 201],
+       [  2, 124,  20, ..., 188,  98,  75],
        ...,
-       [521, 385, 522, ..., 167, 268, 347],
-       [522, 355, 513, ..., 379, 313, 117],
-       [523, 385, 422, ..., 297, 497, 513]]), 'params': {'n_neighbors': 30, 'method': 'umap', 'metric': 'euclidean', 'n_pcs': 30, 'use_rep': 'X_pca'}}"
+       [521, 513, 485, ..., 473, 386, 479],
+       [522, 485, 399, ..., 203, 481, 400],
+       [523, 385, 481, ..., 297, 373, 491]]), 'params': {'n_neighbors': 30, 'method': 'umap', 'metric': 'euclidean', 'n_pcs': 30, 'use_rep': 'X_pca'}}"

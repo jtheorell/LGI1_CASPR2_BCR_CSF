@@ -58,10 +58,11 @@ gse <- gseGO(geneList=gene_list,
 #                                      There are ties in the preranked stats (0.01% of the list).
 #                                  The order of those tied genes will be arbitrary, which may produce unexpected results.
 #                                  2: In fgseaMultilevel(...) :
-#                                      There were 48 pathways for which P-values were not calculated properly due to unbalanced (positive and negative) gene-level statistic values. For such pathways pval, padj, NES, log2err are set to NA. You can try to increase the value of the argument nPermSimple (for example set it nPermSimple = 10000)
+#                                      There were 45 pathways for which P-values were not calculated properly due to unbalanced (positive and negative) gene-level statistic values. For such pathways pval, padj, NES, log2err are set to NA. You can try to increase the value of the argument nPermSimple (for example set it nPermSimple = 10000)
 #                                  3: In fgseaMultilevel(...) :
 #                                      For some of the pathways the P-values were likely overestimated. For such pathways log2err is set to NA.
                                   
+saveRDS(gse, "Results/Gene_set_enrichment_analysis/GS_non-MS.rds")
 
 dotplot(gse, showCategory=10, split=".sign") + facet_grid(.~.sign)
 ggsave("Results/Gene_set_enrichment_analysis/Gene_set_enrichment_dotplot_downsamp_non-MS.pdf", width = 8, height = 12)

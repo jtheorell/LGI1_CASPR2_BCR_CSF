@@ -95,7 +95,7 @@ integrDatNoRib <- lapply(integrDat, function(x){
     x[-which(row.names(x) %in% ribosomal$hgnc_symbol),]
 })
 
-#Still 7065 genes. 
+#Still 7016 genes. 
 
 #Now, we calculate the FDR-corrected p-values
 integrDatNoRib <- lapply(integrDatNoRib, function(x){
@@ -132,10 +132,10 @@ upGeneMsAll <- Reduce(intersect, upGeneList[which(names(upGeneList) %in%
                                                         c("MS_Ramesh", "MS_Schafflick"))])
 upGeneMs <- upGeneMsAll[-which(upGeneMsAll %in% upGeneCommon)]
 
-# "ADM"      "ADORA2A"  "BCKDHA"   "BOLA2B"   "BSCL2"    "C19orf48" "COPG1"    "CYP51A1"  "DDX39A"  
-# "EWSR1"    "IFI30"    "IGLL5"    "LIME1"    "MAN2B1"   "MCM2"     "MCM3"     "MCM5"     "MCM7"    
-# "NOMO2"    "PRMT5"    "RRM2"     "SELPLG"   "SLX1A"    "STT3A"    "TK1"      "TM9SF1"   "TXNDC5"  
-# "UQCRC1"   "USP11"    "ZNF410"  
+#"ADM"      "ADORA2A"  "BCKDHA"   "BOLA2B"   "BSCL2"    "C19orf48" "COPG1"    "DDX39A"   "EWSR1"   
+#"IFI30"    "IGLL5"    "LIME1"    "MAN2B1"   "MCM2"     "MCM3"     "MCM4"     "MCM5"     "MCM7"    
+#"NOMO2"    "PNP"      "RRM2"     "SEC13"    "SELPLG"   "SLX1A"    "STT3A"    "TBL3"     "TK1"     
+#"TM9SF1"   "TPI1"     "TXNDC5"   "UQCRC1"   "USP11"   
 
 #Now: downregulated genes?
 downGeneList <-  lapply(integrDatNoRib[-which(names(integrDatNoRib) == "Median")], function(x){
@@ -144,20 +144,20 @@ downGeneList <-  lapply(integrDatNoRib[-which(names(integrDatNoRib) == "Median")
 
 downGeneCommon <- Reduce(intersect, downGeneList)
 
-# "HLA-B" "HLA-C"
+# "HLA-B" "HLA-C" "PSMB8"
 
 #Now, if MS is excluded?
 downGeneNonMsAll <- Reduce(intersect, downGeneList[-which(names(downGeneList) %in% 
                                                         c("MS_Ramesh", "MS_Schafflick", "Specific"))])
 downGeneNonMs <- downGeneNonMsAll[-which(downGeneNonMsAll %in% downGeneCommon)]
-#"NTAN1" "PSMB8" "VPS28"
+#"NTAN1"  "PLAC8"  "SMCHD1" "VPS28" 
 
 #Now, what about the MS?
 downGeneMsAll <- Reduce(intersect, downGeneList[which(names(downGeneList) %in% 
                                                             c("MS_Ramesh", "MS_Schafflick"))])
 downGeneMs <- downGeneMsAll[-which(downGeneMsAll %in% downGeneCommon)]
 
-#"CHMP4B"   "HLA-DPB1" "HLA-DRA"  "HLA-DRB1" "PPDPF"    "SEC61G"   "TGFB1"    "TPT1"     "UQCRB"  
+#"C12orf75" "CHMP4B"   "HLA-DRA"  "HLA-DRB1" "PPDPF"    "TGFB1"    "TPT1"     
 #Are unique
 
 #############
