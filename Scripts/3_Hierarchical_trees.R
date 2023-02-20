@@ -10,9 +10,8 @@
 R
 setwd("/data")
 library(dowser)
-BCR_all <- read.csv("Data/BCR_database_versions/6_Specificity_included.csv")
 
-BCR_clonal <- BCR_all[which(BCR_all$Clonal == TRUE),]
+BCR_clonal <- read.csv("Data/BCR_database_versions/6_Specificity_included.csv")
 BCR_clonal$seq_id <- paste0(BCR_clonal$CELL, BCR_clonal$LOCUS)
 clones = formatClones(BCR_clonal,id = "seq_id",
                       seq = "SEQUENCE_IMGT", 
