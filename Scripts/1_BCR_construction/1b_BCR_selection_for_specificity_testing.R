@@ -103,9 +103,10 @@ original_selection <- read.csv("Data/BCR_auxiliaries/Originally_selected_BCRs.cs
 
 #How many of these should have been captured with the above criteria?
 length(original_selection)-length(unique(BCR_data_H_long$CELL[which(BCR_data_H_long$CELL %in% original_selection)]))
-#1
-#So all but one could have been selected. This single one was excluded due to 
-#slightly higher current setpoints for the 
+#6
+#So all but six could have been selected (of which 5 are clonal neighbors from 1166, and just used 
+#to clarify the intraclonal consistency first, so essentially it is one cell that we miss. This single 
+#one was excluded due to slightly higher current setpoints for the 
 #shortest chains, as in the very original selection, the non-IgGs were excluded
 #post light chain exclusions. 
 BCR_data_H <- BCR_data[which(BCR_data$LOCUS =="H"),]
@@ -119,6 +120,6 @@ table(originalSample, originalClonality)
 
 #        originalClonality
 #originalSample FALSE TRUE
-#1166_1    26   27
+#1166_1    26   48
 #1227_1     7    4
 #1284_1    9   12

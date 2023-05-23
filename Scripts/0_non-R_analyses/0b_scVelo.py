@@ -28,13 +28,10 @@ adata = scv.read("all_donors.loom")
 
 scv.pl.proportions(adata)
 
-#I have increased this to 8000 to make sure that we have some cyclin genes included for the cell cycle step. 
-scv.pp.filter_and_normalize(adata, min_shared_counts=20, n_top_genes=8000)
+scv.pp.filter_and_normalize(adata, min_shared_counts=20, n_top_genes=2000)
+
+scv.pp.filter_and_normalize(adata, min_shared_counts=20, n_top_genes=2000)
 scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
-
-#Here, we will export the adata file, for later use in DeepCycle. 
-adata.write("../../DeepCycle/adata_post_moments.h5ad")
-
 
 scv.tl.velocity(adata, mode='deterministic')
 
@@ -57,6 +54,3 @@ scv.pl.scatter(adata, color='velocity_pseudotime', cmap='gnuplot')
 #And can that last thing be exported, i.e. the peudotime vector? Would be extremely useful. 
 adata.write_csvs('All_cells')
 adata.write("../../DeepCycle/adata_complete.h5ad")
-
-quit()
-
