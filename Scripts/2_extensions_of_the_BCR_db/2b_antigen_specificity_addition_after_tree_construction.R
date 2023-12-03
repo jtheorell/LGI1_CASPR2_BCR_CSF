@@ -95,7 +95,18 @@ table(BCR_all$EPTP, BCR_all$LRR)
 #TRUE          72          0    0
 #Great, no overlaps. 
 
+
+
+#Now, one thing that turned out to be important in the review process
+#was the more clear division of the LGI1 and CASPR2 cells/BCRs, so here
+#we introduce a new colData column
+BCR_all$Specific_antigen <- BCR_all$Specific
+BCR_all$Specific_antigen[which(BCR_all$Specific == "TRUE")] <- "LGI1"
+BCR_all$Specific_antigen[which(BCR_all$Specific == "TRUE" &
+                                   BCR_all$Sample == "1284_1")] <- "CASPR2"
+BCR_all$Specific_antigen <- factor(BCR_all$Specific_antigen, 
+                                   levels = c("FALSE", "Not_tested", 
+                                              "CASPR2", "LGI1"))
 #This looks right. 
 write.csv(BCR_all, "Data/BCR_database_versions/7_Subclones_included.csv", 
           row.names = FALSE)
-

@@ -40,6 +40,6 @@ library(ggplot2)
 ggplot(testTab, aes(fill=Binder, y=Freq, x=Clone)) + 
     geom_bar(position="stack", stat="identity") + scale_fill_manual(values = c("black", "orange"))+
     theme_bw()
-ggsave("Results/CloneBarGraphs/Specificity_per_clone.pdf", width = 6, height = 4)
+ggsave("Results/Figure_1_plots/Specificity_per_clone.pdf", width = 6, height = 4)
 
 

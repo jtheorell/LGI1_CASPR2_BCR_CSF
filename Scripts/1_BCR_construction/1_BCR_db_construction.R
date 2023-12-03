@@ -214,7 +214,7 @@ dim(bracerFile2Chain)
 #1040   59
 #Now, we are down to 1040 chains from the remaining, complete cells, i.e. 2 chains per cell. 
 #And this is saved
-write.csv(bracerFile2Chain, "Data/BCR_database_versions/3_IMGT_gapped_db_TPM_added_1H_1L.csv", 
+write.csv(bracerFile2Chain, "Data/BCR_database_versions/2_IMGT_gapped_db_TPM_added_1H_1L.csv", 
           row.names =FALSE)
 
 #Now, we use the standard Hamming-based definition of clones from Chanteo/shazam.
@@ -236,13 +236,13 @@ plot(output, binwidth=0.02, title="Density Method")
 #Now, we go on to ChangeO and we get the clustering results, but we start by
 changeoClusteringFile <- bracerFileH[,c("CELL", "SEQUENCE_ID", "V_CALL", "J_CALL",
                                         "JUNCTION", "TPM")]
-write.table(changeoClusteringFile, "Data/BCR_database_versions/changeoClusteringFile.tsv", 
+write.table(changeoClusteringFile, "Data/BCR_database_versions/3_changeoClusteringFile.tsv", 
             sep = "\t",row.names = FALSE)
 
-system(paste0("DefineClones.py -d Data/BCR_database_versions/changeoClusteringFile.tsv -o Data/BCR_database_versions/changeoClusteringFile_Ham_result.tsv --act set --model ham --norm len --format changeo --sf JUNCTION --vf V_CALL --jf J_CALL --dist ", output@threshold))
+system(paste0("DefineClones.py -d Data/BCR_database_versions/3_changeoClusteringFile.tsv -o Data/BCR_database_versions/3b_changeoClusteringFile_Ham_result.tsv --act set --model ham --norm len --format changeo --sf JUNCTION --vf V_CALL --jf J_CALL --dist ", output@threshold))
 
 #Now, we re-import these. 
-hamClones <- read.table("Data/BCR_database_versions/changeoClusteringFile_Ham_result.tsv", header = TRUE)
+hamClones <- read.table("Data/BCR_database_versions/3b_changeoClusteringFile_Ham_result.tsv", header = TRUE)
 
 #At this stage, we actually exchange the clone numbers for a standardised set used
 #in previous rounds of analysis. They are in all respects equal
@@ -352,17 +352,16 @@ table(bracerFileHam$light_type)
 
 #Now, we add mutational information
 bracerFileHam <- observedMutations(bracerFileHam, sequenceColumn = "SEQUENCE_IMGT",
-                                   germlineColumn = "GERMLINE_IMGT",
-                                   regionDefinition = IMGT_V)
+                                        germlineColumn = "GERMLINE_IMGT",
+                                        regionDefinition = IMGT_VDJ_BY_REGIONS,
+                                        juncLengthColumn = "JUNCTION_LENGTH",
+                                        nproc = 7)
 
-#We also add a column with the total number of mutations
-bracerFileHam$All_mutations <- rowSums(bracerFileHam[,c("mu_count_cdr_r",
-                                                    "mu_count_cdr_s",
-                                                    "mu_count_fwr_r",
-                                                    "mu_count_fwr_s"),])
+bracerFileHam$All_mutations <- apply(bracerFileHam[,grep("cdr|fwr", colnames(bracerFileHam))], 1, sum)
+bracerFileHam$Non_silent_mutations <- apply(bracerFileHam[,grep("_r", colnames(bracerFileHam))], 1, sum)
 
-bracerFileHam$Non_silent_mutations <- rowSums(bracerFileHam[,c("mu_count_cdr_r",
-                                                        "mu_count_fwr_r"),])
+bracerFileHam$CDR_mutations <- apply(bracerFileHam[,grep("cdr", colnames(bracerFileHam))], 1, sum)
+bracerFileHam$Non_silent_CDR_mutations <- apply(bracerFileHam[,grep("cdr._r", colnames(bracerFileHam))], 1, sum)
 
 #And a simple column denoting if the cell is clonal or not. 
 bracerFileHam$Clonal <- FALSE

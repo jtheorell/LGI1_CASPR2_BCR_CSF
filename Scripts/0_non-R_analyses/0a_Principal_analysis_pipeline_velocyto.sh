@@ -64,6 +64,8 @@ R
 bamList <- list.files(".", recursive = TRUE, pattern = "Coord.out.bam")
 sapply(bamList[1:length(bamList)], function(x) file.rename(x, paste0(substr(x, 1, 15), gsub("|/Aligned.sortedByCoord|", "", x))))
 
+
+#And here comes a large set of velocyto runs. 
 cd /proj/sens2021562/nobackup/221215_LGI1_B_velocyto
 mkdir velocyto
 
@@ -152,3 +154,7 @@ cp -r /proj/sens2021562/nobackup/221215_LGI1_B_velocyto/velocyto \
 cd ~/Labbet/2022/220818_full_LGI1_B-cell_analysis/For_github/Data/Velocity
 sftp -q jakob-sens2021562@bianca-sftp.uppmax.uu.se:jakob-sens2021562
 get -r velocyto_out
+
+
+cp -r /proj/sens2021562/220929_LGI1_B_velocyto/raw_fastq \
+/proj/sens2021562/nobackup/wharf/jakob/jakob-sens2021562/220929_LGI1_B_velocyto_raw_fastq_real

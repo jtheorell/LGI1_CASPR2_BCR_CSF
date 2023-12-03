@@ -49,12 +49,12 @@ aeSceBSpecKnown <- aeSceB[,which(aeSceB$Specific != "Not_tested")]
 
 table(paste0(aeSceBSpecKnown$Specific, "_", aeSceBSpecKnown$donor), 
       aeSceBSpecKnown$Clonal, useNA = "ifany")
-#                 FALSE TRUE
-#FALSE_1166          3    1
-#FALSE_1227          2    0
-#FALSE_1284          6    0
-#TRUE_1166           0    2
-#TRUE_1284           1    2
+#              FALSE TRUE
+#  CASPR2_1284     1    1
+#  FALSE_1166      2    1
+#  FALSE_1227      2    0
+#  FALSE_1284      5    0
+#  LGI1_1166       0    2
 
 #So much overrepresented is clonality and the cells here are luckily distributed among
 #two donors and two disorders. 
@@ -80,14 +80,14 @@ plotDat <-  data.frame("Specific" = aeSce$Specific, "cellType" = aeSce$cellType,
 plotDat <- plotDat[-which(plotDat$Specific == "Not_tested"),]
 
 #Now, we want the specifics to be on top
-plotDat$Specific <- factor(plotDat$Specific, levels = c("TRUE", "FALSE"))
+plotDat$Specific <- factor(plotDat$Specific, levels = c("FALSE", "LGI1", "CASPR2"))
 
 plotDatOrdered <- plotDat[order(plotDat$Specific),]
 
 #We also introduce a size parameter, to make the specific B-cells come out
 #clearer. 
 plotDatOrdered$specB <- FALSE
-plotDatOrdered$specB[which(plotDatOrdered$Specific == "TRUE" & plotDatOrdered$cellType == "B")] <-  TRUE
+plotDatOrdered$specB[which(plotDatOrdered$Specific != "FALSE" & plotDatOrdered$cellType == "B")] <-  TRUE
 
 dir.create("Results/Figure_3_plots/Specific_B_cell_analysis")
 
@@ -96,7 +96,7 @@ ggplot(plotDatOrdered, aes(x = CD27RNA, y = CD20,
                            shape = cellType,
                            size = specB)) + 
     geom_point() + theme_bw() + theme(aspect.ratio=1) + 
-    scale_color_manual(values = c("orange", "black")) +
+    scale_color_manual(values = c("black", "orange", "#FF6633")) +
     scale_shape_manual(values = c(17,15)) + 
     scale_size_manual(values = c(4, 7))
 ggsave("Results/Figure_3_plots/Specific_B_cell_analysis/CD27RNA_vs_CD20.pdf", width = 5, height = 6)
@@ -106,7 +106,7 @@ ggplot(plotDatOrdered, aes(x = CD79A, y = CD20,
                            shape = cellType,
                            size = specB)) + 
     geom_point() + theme_bw() + theme(aspect.ratio=1) + 
-    scale_color_manual(values = c("orange", "black")) +
+    scale_color_manual(values = c("black", "orange", "#FF6633")) +
     scale_shape_manual(values = c(17,15)) + 
     scale_size_manual(values = c(4, 7))
 ggsave("Results/Figure_3_plots/Specific_B_cell_analysis/CD79A_vs_CD20.pdf", width = 5, height = 6)
@@ -116,7 +116,7 @@ ggplot(plotDatOrdered, aes(x = XBP1, y = CD20,
                            shape = cellType,
                            size = specB)) + 
     geom_point() + theme_bw() + theme(aspect.ratio=1) + 
-    scale_color_manual(values = c("orange", "black")) +
+    scale_color_manual(values = c("black", "orange", "#FF6633")) +
     scale_shape_manual(values = c(17,15)) + 
     scale_size_manual(values = c(4, 7))
 ggsave("Results/Figure_3_plots/Specific_B_cell_analysis/XBP1_vs_CD20.pdf", width = 5, height = 6)
@@ -126,7 +126,7 @@ ggplot(plotDatOrdered, aes(x = IRF4, y = CD20,
                            shape = cellType,
                            size = specB)) + 
     geom_point() + theme_bw() + theme(aspect.ratio=1) + 
-    scale_color_manual(values = c("orange", "black")) +
+    scale_color_manual(values = c("black", "orange", "#FF6633")) +
     scale_shape_manual(values = c(17,15)) + 
     scale_size_manual(values = c(4, 7))
 ggsave("Results/Figure_3_plots/Specific_B_cell_analysis/IRF4_vs_CD20.pdf", width = 5, height = 6)
@@ -136,7 +136,7 @@ ggplot(plotDatOrdered, aes(x = BLIMP1, y = CD20,
                            shape = cellType,
                            size = specB)) + 
     geom_point() + theme_bw() + theme(aspect.ratio=1) + 
-    scale_color_manual(values = c("orange", "black")) +
+    scale_color_manual(values = c("black", "orange", "#FF6633")) +
     scale_shape_manual(values = c(17,15)) + 
     scale_size_manual(values = c(4, 7))
 ggsave("Results/Figure_3_plots/Specific_B_cell_analysis/BLIMP1_vs_CD20.pdf", width = 5, height = 6)
@@ -146,7 +146,7 @@ ggplot(plotDatOrdered, aes(x = HLADRA, y = CD20,
                            shape = cellType,
                            size = specB)) + 
     geom_point() + theme_bw() + theme(aspect.ratio=1) + 
-    scale_color_manual(values = c("orange", "black")) +
+    scale_color_manual(values = c("black", "orange", "#FF6633")) +
     scale_shape_manual(values = c(17,15)) + 
     scale_size_manual(values = c(4, 7))
 ggsave("Results/Figure_3_plots/Specific_B_cell_analysis/HLA-DRA_vs_CD20.pdf", width = 5, height = 6)
@@ -154,26 +154,36 @@ ggsave("Results/Figure_3_plots/Specific_B_cell_analysis/HLA-DRA_vs_CD20.pdf", wi
 #ANd now some stats. We check if the expression of these markers
 #is increased in specific B compared to non-specific (FIsher is 
 #the other way around, hence "less")
+#BLIMP1 is expressed byu none, so it is excluded. 
 bDatOrd <- plotDatOrdered[which(plotDatOrdered$cellType == "B"),]
-fisherList <- lapply(c("XBP1", "BLIMP1", "CD27RNA", "IRF4"), function(x){
+fisherList <- lapply(c("XBP1", "CD27RNA", "IRF4"), function(x){
     locDat <- bDatOrd[,which(colnames(bDatOrd) %in% c(x, "Specific"))]
     locDat$expr <- "Neg"
     locDat$expr[which(locDat[,x] > 0)] <- "Pos"
     fisher.test(table(locDat$expr, locDat$Specific), alternative = "less")$p.value
 })
-names(fisherList) <- c("XBP1", "BLIMP1", "CD27RNA", "IRF4")
+names(fisherList) <- c("XBP1",  "CD27RNA", "IRF4")
 
-#Now, we are going to pick out the ones that are prePB: 
-pcSce <- readRDS("Data/SingleCellExpFiles/4_all_spec_with_LLPC_info.rds")
-prePBSce <- pcSce[,which(pcSce$llpcSingler == "prePB" | 
-                             (pcSce$Specific == "TRUE" & 
-                                  pcSce$cellType == "B"))]
+#$XBP1
+#[1] 0.04095904
+#
+#$CD27RNA
+#[1] 0.7202797
+#
+#$IRF4
+#[1] 0.6703297
 
-xbp1Dat <- logcounts(prePBSce)[which(rowData(prePBSce)$hgnc_symbol == "XBP1"),]
-cd20Dat <- normcounts(altExp(prePBSce, "flowData"))["CD20",]
-xpb1Df <- data.frame(prePBSce$cellTypes, prePBSce$llpcSingler, 
-                     prePBSce$Specific, xbp1Dat, cd20Dat)
-xpb1Df <- xpb1Df[order(xpb1Df$xbp1Dat),]
-
+##Now, we are going to pick out the ones that are prePB: 
+#pcSce <- readRDS("Data/SingleCellExpFiles/4_all_spec_with_LLPC_info.rds")
+#prePBSce <- pcSce[,which(pcSce$llpcSingler == "prePB" | 
+#                             (pcSce$Specific == "TRUE" & 
+#                                  pcSce$cellType == "B"))]
+#
+#xbp1Dat <- logcounts(prePBSce)[which(rowData(prePBSce)$hgnc_symbol == "XBP1"),]
+#cd20Dat <- normcounts(altExp(prePBSce, "flowData"))["CD20",]
+#xpb1Df <- data.frame(prePBSce$cellTypes, prePBSce$llpcSingler, 
+#                     prePBSce$Specific, xbp1Dat, cd20Dat)
+#xpb1Df <- xpb1Df[order(xpb1Df$xbp1Dat),]
+#
 
 

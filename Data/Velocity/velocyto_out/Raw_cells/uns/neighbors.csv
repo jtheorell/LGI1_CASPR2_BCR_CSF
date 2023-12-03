@@ -1,0 +1,7 @@
+"{'connectivities_key': 'connectivities', 'distances_key': 'distances', 'indices': array([[  0,  11, 227, ..., 193, 281, 234],
+       [  1, 312,   2, ..., 153,  64, 315],
+       [  2,  13,   1, ...,  20, 219, 130],
+       ...,
+       [521, 469, 457, ..., 340, 518, 343],
+       [522, 485, 399, ..., 299, 290, 479],
+       [523, 481, 459, ..., 476, 485, 298]]), 'params': {'method': 'umap', 'metric': 'euclidean', 'n_neighbors': 30, 'n_pcs': 30, 'use_rep': 'X_pca'}}"

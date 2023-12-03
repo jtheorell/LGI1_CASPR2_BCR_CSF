@@ -16,13 +16,13 @@ table(BCR_data$Sample[which(BCR_data$LOCUS == "H")])
 
 hist(nchar(BCR_data$SEQUENCE_VDJ_UNGAPPED[which(BCR_data$LOCUS == "H")]))
 quantile(nchar(BCR_data$SEQUENCE_VDJ_UNGAPPED[which(BCR_data$LOCUS == "H")]), 0.1)
-#339.4
+#325
 hist(nchar(BCR_data$SEQUENCE_VDJ_UNGAPPED[which(BCR_data$LOCUS == "K")]))
 quantile(nchar(BCR_data$SEQUENCE_VDJ_UNGAPPED[which(BCR_data$LOCUS == "K")]), 0.1)
-#275.2
+#281.6
 hist(nchar(BCR_data$SEQUENCE_VDJ_UNGAPPED[which(BCR_data$LOCUS == "L")]))
 quantile(nchar(BCR_data$SEQUENCE_VDJ_UNGAPPED[which(BCR_data$LOCUS == "L")]), 0.1)
-#304.6
+#313.8 
 
 #This shows that all three chain loci have significant lower tails. We will
 #exclude cells that has the heavy or the light chain, in this shortest 10% fraction. 
@@ -40,7 +40,7 @@ short_chains <- unique(unlist(lapply(split(BCR_data, f = BCR_data$LOCUS), functi
                                            })))
 
 length(short_chains)/length(unique(BCR_data$CELL))
-#0.191601
+#0.1942257
 #This means that 19% of the cells have at least one chain that is short. 
 
 #Here, we focus the analysis on the heavy chains. 
@@ -53,7 +53,7 @@ BCR_data_H_long <- BCR_data_H[-which(BCR_data_H$CELL %in% short_chains),]
 #FOR FIGURE 1
 #############
 length(short_chains)
-#73
+#74
 
 table(BCR_data_H_long$ISOTYPE, BCR_data_H_long$Clonal)
 #      FALSE TRUE

@@ -1,7 +1,7 @@
 library(flowCore)
 library(flowSpecs)
 
-fsList <- readRDS("Data/raw_flow_cytometry_data.rds")
+fsList <- readRDS("Data/Cytometry/raw_flow_cytometry_data.rds")
 #To make things work, we need to make the lymphcoyte and monocytes a separate thing
 
 #Now, we test what a reasonable transformation cofactor is

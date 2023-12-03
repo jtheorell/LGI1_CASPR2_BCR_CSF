@@ -1,173 +1,184 @@
 library(DepecheR)
 library(scater)
+library(ggplot2)
+library(SingleCellExperiment)
 #Here, we are going to make a plot showing the B-cell compartment in all its
 #complexity and overlay the specificity information. 
 csfSce <- readRDS("Data/SingleCellExpFiles/csfSce_2_norm.rds")
-
-BCR_all <- read.csv("Data/BCR_database_versions/7_Subclones_included.csv")
-
 
 #Now, we will generate an UMAP specifically to separate the ASC from the 
 #B cells 
 
 dir.create("Results/Figure_2_plots/Flow_specific", recursive = TRUE)
 flowDatLoc <- as.data.frame(t(normcounts(altExp(csfSce, "flowData")))[,c("CD38", "CD138", "CD27", "IgD", "CD20")])
-#As CD138 has an important role in separation of these cell types we will give it
-#extra weight
+#As CD138 and CD20 have more influence on the B/ASC division we increase their weight them here: 
 flowDatLoc$CD138 <- flowDatLoc$CD138*1.5
+flowDatLoc$CD20 <- flowDatLoc$CD20*1.5
 set.seed(11)
 bUmap <- uwot::umap(flowDatLoc)
 dColorPlot(flowDatLoc, xYData = bUmap, plotDir = "Results/Figure_2_plots/Flow_specific/Markers")
 
-#To make this plot look nice, I will reorder the events to show up with the 
-#specifics on top. Importantly, a large group of cells have not been considered for this
-#at all, as they are non-IgG. They are included as "not_tested" here. 
-csfSce$Specific[which(is.na(csfSce$Specific))] <- "Not_tested"
-flowDatLoc$Specific <- factor(csfSce$Specific, levels = c("FALSE", "TRUE", "Not_tested"))
-bFlowReordered <- flowDatLoc[order(flowDatLoc$Specific, decreasing = TRUE),]
-umapReordered <- bUmap[order(flowDatLoc$Specific, decreasing = TRUE),]
+flowDatLoc$Specific <- csfSce$Specific
+flowDatLoc$donor <- csfSce$donor
+flowDatLoc$cellType <- csfSce$cellType
+notTestRows <- which(flowDatLoc$Specific == "Not_tested")
+flowDatTested <- flowDatLoc[-notTestRows,]
+bUmapTested <- bUmap[-notTestRows,]
+flowDatTested$Specific <- factor(flowDatTested$Specific, 
+                                 levels = c("FALSE", "LGI1", "CASPR2"))
 
-dColorPlot(as.character(bFlowReordered$Specific), colorScale = c("black", "grey", "orange"),
-           xYData = umapReordered, plotName = "Results/Figure_2_plots/Flow_specific/Specific", 
-           densContour = FALSE)
-dColorPlot(as.character(bFlowReordered$Specific)[-which(bFlowReordered$Specific == "Not_tested")], 
-           colorScale = c("black", "grey", "orange"),
-           xYData = umapReordered[-which(bFlowReordered$Specific == "Not_tested"),], 
-           dotSize = 20,
-           plotName = "Results/Figure_2_plots/Flow_specific/Specific_spec_only", 
-           densContour = FALSE)
+ggDat <- cbind(flowDatTested, as.data.frame(bUmapTested))
+ggplot(ggDat, aes(x = V1, y = V2, 
+             fill = Specific, 
+             color = Specific)) +
+    geom_point(size = 4) + scale_fill_manual(values = c("black", "orange", "#FF6633"))+
+    scale_color_manual(values = c("black", "orange", "#FF6633"))+
+    theme_bw() + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          aspect.ratio=1)  
+ggsave("Results/Figure_2_plots/Flow_specific/Specific_spec_only_C_and_L_for_main.pdf", width = 6, height = 4)
+
+ggplot(ggDat, aes(x = V1, y = V2, fill = Specific, shape = donor)) +
+    geom_point(size = 4) + scale_fill_manual(values = c("black", "orange", "#FF6633"))+
+    theme_bw() + scale_shape_manual(values = c(24, 22, 23)) + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          aspect.ratio=1)
+ggsave("Results/Figure_2_plots/Flow_specific/Specific_spec_only_C_and_L_for_supp.pdf", width = 6, height = 4)
 
 
-#Now, we will make one further plot set, namely showing the five subsets as colors
-#and shapes on the UMAP. 
-plot(flowDatLoc$IgD, flowDatLoc$CD27)
-plot(flowDatLoc$IgD[which(csfSce$cellType == "B")],
-     flowDatLoc$CD27[which(csfSce$cellType == "B")])
+#Now, we plot cell type vs specificity
 
-#Sadly, the protein CD27 expression is much poorer than the RNAseq
-plot(logcounts(csfSce)[which(rowData(csfSce)$hgnc_symbol == "CD27"),
-                       which(csfSce$cellType == "B")],
-     flowDatLoc$CD27[which(csfSce$cellType == "B")])
-abline(h = 2.3, v = 1)
+ggplot(ggDat, aes(x = V1, y = V2, fill = cellType, color = cellType)) +
+    geom_point(size = 4) + scale_fill_manual(values = c("#2388DD","#BB3322"))+
+    scale_color_manual(values = c("#2388DD","#BB3322"))+
+    theme_bw() + theme(panel.grid.major = element_blank(), 
+                       panel.grid.minor = element_blank(),
+                       aspect.ratio=1)
+ggsave("Results/Figure_2_plots/Flow_specific/Cell_type_spec_for_main.pdf", 
+       width = 6, height = 4)
+ggplot(ggDat, aes(x = V1, y = V2, fill = cellType, shape = donor)) +
+    geom_point(size = 4) + scale_fill_manual(values = c("#2388DD","#BB3322"))+
+    theme_bw() + scale_shape_manual(values = c(24, 22, 23)) + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          aspect.ratio=1)
+ggsave("Results/Figure_2_plots/Flow_specific/Cell_type_spec_for_supp.pdf", 
+       width = 6, height = 4)
 
-CD27RNA <- logcounts(csfSce)[which(rowData(csfSce)$hgnc_symbol == "CD27"),]
-#When investigating these two plots, it is clear that the bulk of the CD27 positive
-#cells are ASC. 
-flowDatLoc$fineGrainedCellType <- "ASC"
-flowDatLoc$fineGrainedCellType[which(csfSce$cellType == "B" & 
-                                       (flowDatLoc$CD27 > 2.3 | CD27RNA > 0) &
-                                       flowDatLoc$IgD > 1)] <- "Unswitched_mem"
+#Now, we are going to make bar graphs with this informaiton. 
 
-flowDatLoc$fineGrainedCellType[which(csfSce$cellType == "B" & 
-                                         (flowDatLoc$CD27 > 2.3 | CD27RNA > 0) &
-                                       flowDatLoc$IgD <= 1)] <- "Mem"
-
-flowDatLoc$fineGrainedCellType[which(csfSce$cellType == "B" & 
-                                         (flowDatLoc$CD27 <= 2.3 & CD27RNA <= 0) &
-                                       flowDatLoc$IgD > 1)] <- "Naïve"
-
-flowDatLoc$fineGrainedCellType[which(csfSce$cellType == "B" & 
-                                         (flowDatLoc$CD27 <= 2.3 & CD27RNA <= 0) &
-                                       flowDatLoc$IgD <= 1)] <- "Double_neg"
-
-dColorPlot(flowDatLoc$fineGrainedCellType, 
-           xYData = bUmap, plotName = "Results/Figure_2_plots/Flow_specific/Fine_grained_cell_type", 
-           colorScale = c("#00204DFF","#D7C463FF", "#838079FF","#FFEA46FF", "#ABA074FF"), 
-           densContour = FALSE)
-
-#And we make a version of this with the non-fine grained cell type
-flowDatLoc$cellType <- flowDatLoc$fineGrainedCellType
-flowDatLoc$cellType[-which(flowDatLoc$cellType =="ASC")] <- "B"
-dColorPlot(flowDatLoc$cellType, 
-           xYData = bUmap, plotName = "Results/Figure_2_plots/Flow_specific/Cell_type", 
-           colorScale = c("#00204DFF","red"), 
-           densContour = FALSE)
-
-dColorPlot(flowDatLoc$cellType[-which(flowDatLoc$Specific == "Not_tested")], 
-           xYData = bUmap[-which(flowDatLoc$Specific == "Not_tested"),], plotName = "Results/Figure_2_plots/Flow_specific/Cell_type_spec", 
-           colorScale = c("#00204DFF","red"), 
-           dotSize = 20,
-           densContour = FALSE)
-
-#NOw, we are going to make bar graphs with this informaiton. 
-
-igGDat <- flowDatLoc[-which(flowDatLoc$Specific == "Not_tested"),]
-#pdf("Results/Figure_2_plots/Specificity_vs_cell_type.pdf", width = 4, height = 6)
-#plot(table(as.character(igGDat$Specific), igGDat$fineGrainedCellType),
-#     color = dColorVector(1:5, colorScale = "dark_rainbow"), main = "")
-#dev.off()
-
-spec_cell_df <- as.data.frame(table(as.character(igGDat$Specific), igGDat$fineGrainedCellType))
-colnames(spec_cell_df) <- c("Specific", "B_subtype", "Freq")
-spec_cell_df$B_subtype <- factor(spec_cell_df$B_subtype, c("ASC", "Mem", "Unswitched_mem", "Double_neg", "Naïve"))
-ggplot(spec_cell_df, aes(x=Specific, y=Freq, fill=B_subtype)) +
-    geom_bar(stat="identity") + theme_bw() + 
-    scale_y_continuous(expand = expansion(mult=c(0,0.05))) +
-    scale_fill_manual(values = c("#00204DFF","#838079FF", "#ABA074FF", "#D7C463FF", "#FFEA46FF"))
-ggsave("Results/Figure_2_plots/Specificity_vs_fine-grained_cell_type.pdf", width = 5, height = 6)
-
-#Now, the same without the finer details. 
-spec_cell_df <- as.data.frame(table(as.character(igGDat$Specific), igGDat$cellType))
+spec_cell_df <- as.data.frame(table(as.character(flowDatTested$Specific), flowDatTested$cellType))
 colnames(spec_cell_df) <- c("Specific", "Cell_type", "Freq")
 spec_cell_df$B_subtype <- factor(spec_cell_df$Cell_type, c("ASC", "B"))
+spec_cell_df$Specific <- factor(spec_cell_df$Specific, c("FALSE",
+                                                         "LGI1",
+                                                         "CASPR2"))
 ggplot(spec_cell_df, aes(x=Specific, y=Freq, fill=Cell_type)) +
     geom_bar(stat="identity") + theme_bw() + 
-    scale_y_continuous(limits = c(0,125),
+    scale_y_continuous(limits = c(0,100),
                        expand = expansion(mult=c(0,0))) +
-    scale_fill_manual(values = c("#00204DFF","red"))
-ggsave("Results/Figure_2_plots/Specificity_vs_cell_type.pdf", width = 5, height = 6)
+    scale_fill_manual(values = c("#2388DD","#BB3322"))
+ggsave("Results/Figure_2_plots/Specificity_vs_cell_type_C_and_L.pdf", width = 5, height = 6)
 
+spec_cell_df
+#  Specific Cell_type Freq B_subtype
+#1     CASPR2       ASC   31       ASC
+#2      FALSE       ASC   17       ASC
+#3       LGI1       ASC   83       ASC
+#4     CASPR2         B    2         B
+#5      FALSE         B   10         B
+#6       LGI1         B    2         B
 
+#We also make a per-donor version
+spec_cell_df <- as.data.frame(table(paste0(flowDatTested$donor, "_", flowDatTested$Specific), flowDatTested$cellType))
+colnames(spec_cell_df) <- c("Spec_don", "Cell_type", "Freq")
+spec_cell_df$B_subtype <- factor(spec_cell_df$Cell_type, c("ASC", "B"))
+spec_cell_df$Spec_don <- factor(spec_cell_df$Spec_don, c("1166_FALSE",
+                                                         "1166_LGI1",
+                                                         "1227_FALSE",
+                                                         "1227_LGI1",
+                                                         "1284_FALSE",
+                                                         "1284_CASPR2"))
+ggplot(spec_cell_df, aes(x=Spec_don, y=Freq, fill=Cell_type)) +
+    geom_bar(stat="identity") + theme_bw() + 
+    scale_y_continuous(limits = c(0,100),
+                       expand = expansion(mult=c(0,0))) +
+    scale_fill_manual(values = c("#2388DD","#BB3322"))
+ggsave("Results/Figure_2_plots/Specificity_vs_cell_type_C_and_L_donors_separated.pdf", width = 6, height = 6)
 
-length(which(igGDat$Specific == "TRUE" & igGDat$fineGrainedCellType == "ASC"))
-#116
-length(which(igGDat$Specific == "TRUE" & igGDat$fineGrainedCellType != "ASC"))
-#5
-#So a tiny fraction in the specific compatment are non-ASC. 
+spec_cell_df
+#      Spec_don Cell_type Freq B_subtype
+#1   1166_FALSE       ASC   14       ASC
+#2    1166_LGI1       ASC   72       ASC
+#3   1227_FALSE       ASC    0       ASC
+#4    1227_LGI1       ASC   11       ASC
+#5  1284_CASPR2       ASC   31       ASC
+#6   1284_FALSE       ASC    3       ASC
+#7   1166_FALSE         B    3         B
+#8    1166_LGI1         B    2         B
+#9   1227_FALSE         B    2         B
+#10   1227_LGI1         B    0         B
+#11 1284_CASPR2         B    2         B
+#12  1284_FALSE         B    5         B
 
-length(which(igGDat$Specific == "FALSE" & igGDat$fineGrainedCellType == "ASC"))
-#19
-length(which(igGDat$Specific == "FALSE" & igGDat$fineGrainedCellType != "ASC"))
-#12
+#So only a tiny fraction in the specific compatment are non-ASC, and the donor-
+#to donor pattern is very similar, with the smallest sample, from 1227, being the 
+#most exgtreme with no non-specifics being ASC and no specifics being B. 
 
-
-#We will also make a fisher test here. 
-fisherDf <- data.frame("Specific" = c(114,4),
-                       "Not_specific" = c(17,10))
+#We will also make two a fisher tests here, one for LGI1 and one for CASPR2. 
+fisherDf <- data.frame("LGI1" = c(83,2),
+                       "Negative" = c(14,5))
 row.names(fisherDf) <- c("ASC", "B")
 
 fisherDf
-#    Specific Not_specific
-#ASC      114           17
-#B          4           10
-
+#    LGI1 Negative
+#ASC   83       14
+#B      2        5
 
 fisher.test(fisherDf)
-#p-value = 6.271e-06, i.e. the B-cell frequency is significantly lower in the specific group. 
+#p-value = 0.002065, i.e. the B-cell frequency is "significantly" lower in the specific group. 
+#THis is of course treating each antibody as a spearate observation, which is a violation
+#of statistical rules. 
 
-#Now, we also plot a few ASC genes
-#Here, we are going to plot a few selected genes to show that the genes we 
-#have selected are indeed ASC. 
-csfSce$b_cell_type <- flowDatLoc$fineGrainedCellType
-plotSce <- csfSce[which(rowData(csfSce)$hgnc_symbol %in% c("XBP1", "MS4A1")),]
+#We will also make two a fisher tests here, one for LGI1 and one for CASPR2. 
+fisherDf <- data.frame("CASPR2" = c(31,2),
+                       "Negative" = c(3,5))
+row.names(fisherDf) <- c("ASC", "B")
 
-#PRDM1 is the new name for BLIMP1, MS4A1 is CD20
-rownames(plotSce) <- rowData(plotSce)$hgnc_symbol
+fisherDf
+#    CASPR2 Negative
+#ASC     31        3
+#B        2        5
 
-g <- plotExpression(plotSce, features=rownames(plotSce), 
-               x="b_cell_type", colour_by="b_cell_type") + theme_bw() + 
-    scale_color_manual(values = dColorVector(1:5, colorScale = "dark_rainbow"))
-ggsave("Results/Figure_2_plots/ASC_vs_B.pdf", width = 6, height = 4)
-g + theme_bw() +theme(axis.text.x=element_blank(),
-                      axis.ticks.x = element_blank(),
-                      axis.text.y=element_blank(),
-                      axis.ticks.y = element_blank(),
-                      legend.position = "none"
-) +xlab("") + ylab("")
-ggsave("Results/Figure_2_plots/ASC_vs_B_no_leg.pdf", width = 4, height = 4)
+fisher.test(fisherDf)
+#p-value = 0.001357, so also here, there is a difference with the same caution as above. 
 
-#And we save the fine grained cell types separately, as they are not used much downstream
-#and it is unnecessary to save a completely new sce for this purpose. 
-flowDatLoc$Cell <- colnames(csfSce)
-saveRDS(flowDatLoc, "Data/Cytometry/Flow_data_and_cell_type_post_integration.rds")
+#And now, finally, separation of the LGI1 donors, for the supplement. 
+#1166:
+fisherDf <- data.frame("LGI1" = c(72,2),
+                       "Negative" = c(14,3))
+row.names(fisherDf) <- c("ASC", "B")
+
+fisherDf
+#    LGI1 Negative
+#ASC   72       14
+#B      2        3
+
+fisher.test(fisherDf)
+#p-value = 0.04341
+
+#1227:
+fisherDf <- data.frame("LGI1" = c(11,0),
+                       "Negative" = c(0,2))
+row.names(fisherDf) <- c("ASC", "B")
+
+fisherDf
+#    LGI1 Negative
+#ASC   11       0
+#B      0       2
+
+fisher.test(fisherDf)
+#p-value = 0.01282
 

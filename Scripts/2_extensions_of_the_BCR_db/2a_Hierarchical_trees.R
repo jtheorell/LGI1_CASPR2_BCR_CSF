@@ -10,8 +10,9 @@
 R
 setwd("/data")
 library(dowser)
+BCR_all <- read.csv("Data/BCR_database_versions/6_Specificity_included.csv")
 
-BCR_clonal <- read.csv("Data/BCR_database_versions/6_Specificity_included.csv")
+BCR_clonal <- BCR_all[-which(is.na(BCR_all$HamClone)),]
 BCR_clonal$seq_id <- paste0(BCR_clonal$CELL, BCR_clonal$LOCUS)
 clones = formatClones(BCR_clonal,id = "seq_id",
                       seq = "SEQUENCE_IMGT", 
@@ -42,13 +43,15 @@ plots = plotTrees(trees, tips="ISOTYPE", tipsize = 3, common_scale = TRUE,
                                                  "IGHG1" = "#B1CFFF",
                                                  "IGHG2" = "#9E4532",
                                                  "Germline" = "black"))
-dir.create("Results/Trees")
-treesToPDF(plots, file="Results/Trees/BCR_trees.pdf",
+dir.create("Results/Figure_4_plots/4E_Trees")
+treesToPDF(plots, file="Results/Figure_4_plots/4E_Trees/BCR_trees_with_Isotype.pdf",
            nrow=2, ncol=2)
+
+#A total of 11 trees are IgG2/IgG4 mixed. So this is 11/48 = 23%
 
 #We also create trees with named leaves
 testPlots <- lapply(plots, function(x) x + geom_tiplab())
-treesToPDF(testPlots, file="Results/Trees/BCR_trees_w_labels.pdf",
+treesToPDF(testPlots, file="Results/Figure_4_plots/4E_Trees/BCR_trees_w_labels.pdf",
            nrow=2, ncol=2)
 
 #These data structures are completely crazy. Luckly there are others who understand
